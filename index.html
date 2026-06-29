@@ -213,7 +213,45 @@ nav.links a:hover{opacity:1;color:var(--accent)}
 }
 .cart-pill:hover{background:var(--mint-deep)}
 .cart-pill .count{background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;font-size:.72rem}
-@media(max-width:720px){nav.links{display:none}}
+.header-right{display:flex;align-items:center;gap:8px}
+
+/* nút hamburger — chỉ hiện trên mobile */
+.nav-toggle{
+  display:none;align-items:center;justify-content:center;
+  width:42px;height:42px;border:2px solid var(--ink);border-radius:12px;
+  background:var(--paper);cursor:pointer;padding:0;
+  transition:background-color .2s ease;
+}
+.nav-toggle:hover{background:var(--mint)}
+.nav-toggle .bars,.nav-toggle .bars::before,.nav-toggle .bars::after{
+  display:block;width:20px;height:2px;background:var(--ink);border-radius:2px;transition:.25s ease;
+}
+.nav-toggle .bars{position:relative}
+.nav-toggle .bars::before,.nav-toggle .bars::after{content:"";position:absolute;left:0}
+.nav-toggle .bars::before{top:-6px}
+.nav-toggle .bars::after{top:6px}
+header.bar.open .nav-toggle .bars{background:transparent}
+header.bar.open .nav-toggle .bars::before{top:0;transform:rotate(45deg)}
+header.bar.open .nav-toggle .bars::after{top:0;transform:rotate(-45deg)}
+
+@media(max-width:720px){
+  .nav-toggle{display:flex}
+  nav.links{
+    display:flex;flex-direction:column;gap:0;
+    position:absolute;top:100%;left:0;right:0;z-index:60;
+    background:var(--paper);border-bottom:2px dashed var(--ink-soft);
+    box-shadow:0 14px 26px var(--shadow);
+    max-height:0;overflow:hidden;opacity:0;pointer-events:none;
+    transition:max-height .32s ease, opacity .25s ease;
+  }
+  header.bar.open nav.links{max-height:340px;opacity:1;pointer-events:auto}
+  nav.links a{
+    padding:15px clamp(16px,5vw,48px);font-size:1.02rem;opacity:1;
+    border-top:1px solid rgba(90,58,46,.12);
+  }
+  nav.links a:first-child{border-top:none}
+  nav.links a:hover{background:var(--mint);color:var(--accent)}
+}
 
 /* =========================================================
    HERO — split-screen color blocking (Grid 2 cột)
@@ -484,14 +522,19 @@ footer p{font-size:.8rem;color:var(--ink-soft);margin:6px 0}
     <img class="mark" src="images/logo.png" width="44" height="44" alt="Logo U Cake" />
     <span>Ú&nbsp;CAKE<small>BAKE WITH LOVE</small></span>
   </div>
-  <nav class="links" aria-label="Điều hướng chính">
+  <nav class="links" id="navLinks" aria-label="Điều hướng chính">
     <a href="#ke-hang">Kệ bánh</a>
     <a href="#dinh-duong">Thành phần</a>
     <a href="#gio-hang">Giỏ hàng</a>
     <a href="#lien-he">Liên hệ</a>
   </nav>
-  <div class="cart-pill" id="cartPill" role="button" tabindex="0" aria-label="Mở giỏ hàng">
-    🛒 <span>Giỏ</span> <span class="count" id="cartCount">0</span>
+  <div class="header-right">
+    <div class="cart-pill" id="cartPill" role="button" tabindex="0" aria-label="Mở giỏ hàng">
+      🛒 <span>Giỏ</span> <span class="count" id="cartCount">0</span>
+    </div>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="navLinks">
+      <span class="bars" aria-hidden="true"></span>
+    </button>
   </div>
 </header>
 
@@ -945,6 +988,28 @@ if(window.gsap && window.ScrollTrigger && !reduceMotion){
   // không GSAP -> hiện hết ngay
   document.querySelectorAll('.reveal,.menu-row').forEach(el=>{el.style.opacity=1;el.style.transform='none';});
 }
+
+/* =======================================================================
+   MENU MOBILE — nút hamburger mở/đóng điều hướng trên điện thoại
+   ======================================================================= */
+(function(){
+  const bar = document.querySelector('header.bar');
+  const toggle = document.getElementById('navToggle');
+  const nav = document.getElementById('navLinks');
+  if(!bar || !toggle || !nav) return;
+  const setOpen = (open)=>{
+    bar.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Đóng menu' : 'Mở menu');
+  };
+  toggle.addEventListener('click', (e)=>{ e.stopPropagation(); setOpen(!bar.classList.contains('open')); });
+  // bấm 1 mục -> cuộn tới rồi đóng menu
+  nav.querySelectorAll('a').forEach(a=>a.addEventListener('click', ()=>setOpen(false)));
+  // bấm ra ngoài header -> đóng
+  document.addEventListener('click', (e)=>{ if(bar.classList.contains('open') && !e.target.closest('header.bar')) setOpen(false); });
+  // phím Esc -> đóng
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') setOpen(false); });
+})();
 </script>
 </body>
 </html>
